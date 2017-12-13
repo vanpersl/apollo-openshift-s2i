@@ -3,7 +3,7 @@
 FROM maven:3-jdk-8
 
 # TODO: Put the maintainer name in the image metadata
-MAINTAINER Zhou Long <lrmz@sohu.com>
+MAINTAINER Zhou Long <lrmz@github.com>
 
 # TODO: Rename the builder environment variable to inform users about application you provide them
 # ENV BUILDER_VERSION 1.0
