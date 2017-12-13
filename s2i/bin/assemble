@@ -1,0 +1,52 @@
+#!/bin/bash -e
+#
+# S2I assemble script for the 'apollo-configservice-build' image.
+# The 'assemble' script builds your application source so that it is ready to run.
+#
+# For more information refer to the documentation:
+#	https://github.com/openshift/source-to-image/blob/master/docs/builder_image.md
+#
+
+# If the 'apollo-configservice-build' assemble script is executed with the '-h' flag, print the usage.
+if [[ "$1" == "-h" ]]; then
+	exec /usr/libexec/s2i/usage
+fi
+
+# Restore artifacts from the previous build (if they exist).
+#
+if [ "$(ls /tmp/artifacts/ 2>/dev/null)" ]; then
+  echo "---> Restoring build artifacts..."
+  mv /tmp/artifacts/. ./
+fi
+
+echo "---> Installing application source..."
+mkdir -p ./code
+cp -Rf /tmp/src/. ./code
+
+
+echo "---> Replace maven settings.xml..."
+rm -rf /usr/share/maven/conf/settings.xml
+wget http://your.nexus.com/open/nexus/raw/master/settings.xml -O /usr/share/maven/conf/settings.xml
+
+apollo_config_db_url=jdbc:oracle:thin:@10.10.10.10:1523:ORA130T
+apollo_config_db_username=ApolloConfigDB
+apollo_config_db_password=1234
+apollo_config_db_schema=ApolloConfigDB
+uat_meta=http://uat.apollo.shift.x
+
+echo "==== starting to build config-service and admin-service ===="
+cd ./code
+mvn clean package -DskipTests -pl apollo-configservice,apollo-adminservice -am -Dapollo_profile=github -Dspring_datasource_url=$apollo_config_db_url -Dspring_datasource_username=$apollo_config_db_username -Dspring_datasource_password=$apollo_config_db_password -Dspring_jpa_hibernate_default_schema=$apollo_config_db_schema
+
+echo "==== starting unzip config-service ===="
+cd /opt/code/apollo-configservice/target
+mkdir -p /opt/config
+cp *.zip /opt/config/config.zip
+cd /opt/config/
+unzip config.zip
+echo "==== starting unzip admin-service ===="
+cd /opt/code/apollo-adminservice/target
+mkdir -p /opt/admin
+cp *.zip /opt/admin/admin.zip
+cd /opt/admin/
+unzip admin.zip
