@@ -1,0 +1,52 @@
+#!/bin/bash -e
+#
+# S2I assemble script for the 'apollo-configservice-build' image.
+# The 'assemble' script builds your application source so that it is ready to run.
+#
+# For more information refer to the documentation:
+#	https://github.com/openshift/source-to-image/blob/master/docs/builder_image.md
+#
+
+# If the 'apollo-configservice-build' assemble script is executed with the '-h' flag, print the usage.
+if [[ "$1" == "-h" ]]; then
+	exec /usr/libexec/s2i/usage
+fi
+
+# Restore artifacts from the previous build (if they exist).
+#
+if [ "$(ls /tmp/artifacts/ 2>/dev/null)" ]; then
+  echo "---> Restoring build artifacts..."
+  mv /tmp/artifacts/. ./
+fi
+
+echo "---> Installing application source..."
+mkdir -p ./code
+cp -Rf /tmp/src/. ./code
+
+
+echo "---> Replace maven ${MAVEN_SET_URL}..."
+mkdir -p ~/.m2
+wget ${MAVEN_SET_URL} -O ~/.m2/settings.xml
+
+#apollo_portal_db_url=jdbc:oracle:thin:@172.0.0.1:1521:airdept
+#apollo_portal_db_username=ApolloPortalDB
+#apollo_portal_db_password=123
+
+#uat_meta=http://uat.apollo.shift.x
+#dev_meta=http://dev.apollo.shift.x
+
+META_SERVERS_OPTS="-Ddev_meta=$dev_meta -Dfat_meta=$fat_meta -Duat_meta=$uat_meta -Dpro_meta=$pro_meta"
+
+echo "==== starting to build config-service and admin-service ===="
+cd ./code
+mvn clean package -DskipTests -pl apollo-portal -am -Dapollo_profile=github $MAVEN_ARGS
+#-Dspring_datasource_url=$apollo_portal_db_url -Dspring_datasource_username=$apollo_portal_db_username -Dspring_datasource_password=$apollo_portal_db_password $META_SERVERS_OPTS
+
+
+echo "==== starting unzip portal ===="
+cd /opt/code/apollo-portal/target
+mkdir -p /opt/portal
+cp *.zip /opt/portal/portal.zip
+cd /opt/portal/
+unzip portal.zip
+chmod -R 777 /opt
