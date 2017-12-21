@@ -1,5 +1,5 @@
 
-IMAGE_NAME = hub.openshift.x:5000/apollo-meta-s2i
+IMAGE_NAME = vanpersl/apollo-meta-s2i
 
 .PHONY: build
 build:
