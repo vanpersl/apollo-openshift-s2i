@@ -1,5 +1,5 @@
 
-IMAGE_NAME = vanpersl/apollo-meta-s2i
+IMAGE_NAME = zlong/apollo-meta-s2i
 
 .PHONY: build
 build:
