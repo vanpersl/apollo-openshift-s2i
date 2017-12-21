@@ -1,5 +1,5 @@
 
-IMAGE_NAME = hub.openshift.x:5000/apollo-portal-s2i:0.0.1
+IMAGE_NAME = zlong/apollo-portal-s2i:0.0.1
 
 .PHONY: build
 build:
